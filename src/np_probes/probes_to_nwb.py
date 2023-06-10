@@ -104,7 +104,7 @@ if __name__ == '__main__':
     
     #nwb_file = add_to_nwb(session, nwb_file)
 
-    with pynwb.NWBHDF5IO('DRpilot_626791_20220817.nwb', mode='r') as io:
+    with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probes.nwb', mode='r') as io:
         nwb_file = io.read()
         #probes = Probes.from_nwb(nwb_file)
         print()
