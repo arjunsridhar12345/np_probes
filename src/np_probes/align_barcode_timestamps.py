@@ -5,8 +5,8 @@ import re
 from np_probes.utils import get_probe_metrics_path
 import numpy as np
 
-def apply_sample_number_adjustment(event_path:pathlib.Path, probe:str, lfp_path:pathlib.Path) -> None:
-    sample_numbers_data_path  = list(lfp_path.glob('*{}-LFP/sample_numbers.npy'.format(probe)))[0].as_posix()
+def apply_sample_number_adjustment(event_path:pathlib.Path, probe:str, spike_path:pathlib.Path) -> None:
+    sample_numbers_data_path  = list(spike_path.glob('sample_numbers.npy'.format(probe)))[0].as_posix()
     sample_numbers_data = np.load(sample_numbers_data_path)
 
     sample_number_path = list(event_path.glob('*{}-AP/*/sample_numbers.npy'.format(probe)))[0].as_posix()
@@ -26,7 +26,7 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
         spike_path = probe_metrics_path[probe].parent
         event_path = spike_path.parent.parent / 'events'
         lfp_path = spike_path.parent
-        apply_sample_number_adjustment(event_path, probe, lfp_path)
+        apply_sample_number_adjustment(event_path, probe, spike_path)
         probe_dict = {
             "name": 'probe{}'.format(probe),
             "sampling_rate": 30000.0,
