@@ -130,7 +130,7 @@ def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time) -> pynwb.N
     )
 
     ecephys_module = nwbfile.create_processing_module(
-        name="lfp_data", description="processed lfp data"
+        name=f"{probe._name}_lfp", description="processed lfp data"
     )
     ecephys_module.add(lfp_nwb)
     """
