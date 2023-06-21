@@ -98,7 +98,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
         for i in range(384):
             channel_dict = {
                 'probe_id': probe_id,
-                'probe_channel_number': -1,
+                'probe_channel_number': i,
                 'structure_id': -1,
                 'structure_acronym': 'No Area',
                 'anterior_posterior_ccf_coordinate': -1.0,
