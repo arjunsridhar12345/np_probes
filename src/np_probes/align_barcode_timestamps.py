@@ -15,6 +15,14 @@ def apply_sample_number_adjustment(event_path:pathlib.Path, probe:str, spike_pat
     sample_numbers_adjusted = sample_numbers - sample_numbers_data[0]
     np.save(pathlib.Path(pathlib.Path(sample_number_path).parent, 'sample_numbers_adjusted.npy'), sample_numbers_adjusted)
 
+def apply_lfp_sample_number_adjustment(lfp_path:pathlib.Path, probe:str):
+    sample_number_path = list(lfp_path.glob('*{}-LFP/sample_numbers.npy'.format(probe)))[0].as_posix()
+    lfp_samples = np.load(pathlib.Path(sample_number_path))
+    lfp_samples=lfp_samples-np.min(lfp_samples)
+    lfp_samples=lfp_samples*12
+
+    np.save(pathlib.Path(pathlib.Path(sample_number_path).parent, 'sample_numbers_adjusted.npy'), lfp_samples)
+
 def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
     probe_metrics_path = get_probe_metrics_path(session)
 
@@ -27,6 +35,7 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
         event_path = spike_path.parent.parent / 'events'
         lfp_path = spike_path.parent
         apply_sample_number_adjustment(event_path, probe, spike_path)
+        apply_lfp_sample_number_adjustment(lfp_path, probe)
         probe_dict = {
             "name": 'probe{}'.format(probe),
             "sampling_rate": 30000.0,
@@ -41,7 +50,7 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
                 },
                 {
                     "name": "lfp_timestamps",
-                    "input_path": list(lfp_path.glob('*{}-LFP/timestamps.npy'.format(probe)))[0].as_posix(),
+                    "input_path": list(lfp_path.glob('*{}-LFP/sample_numbers_adjusted.npy'.format(probe)))[0].as_posix(),
                     "output_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'lfp_times_{}_aligned.npy'.format(probe)).as_posix()
                 }
             ],

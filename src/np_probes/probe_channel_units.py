@@ -5,6 +5,7 @@ import pandas as pd
 import SimpleITK as sitk
 import numpy as np
 from np_probes.utils import get_probe_metrics_path
+import uuid
 
 def clean_region(region:str) -> str:
     if pd.isna(region):
@@ -24,7 +25,7 @@ def get_day(session:np_session.Session) -> str:
     day = [i + 1 for i in range(len(sessions_mouse)) if str(session.id) in str(sessions_mouse[i])][0]
     return str(day)
 
-def get_channels_info_for_probe(current_probe:str, probe_id:int, id_json_dict:dict, session:np_session.Session) -> list:
+def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_session.Session, id_json_dict:dict[str, list]) -> list:
     channels = []
 
     if len(id_json_dict['channel_ids']) > 0:
@@ -99,7 +100,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, id_json_dict:di
                 'probe_id': probe_id,
                 'probe_channel_number': -1,
                 'structure_id': -1,
-                'structure_acronym': 'No area',
+                'structure_acronym': 'No Area',
                 'anterior_posterior_ccf_coordinate': -1.0,
                 'dorsal_ventral_ccf_coordinate': -1.0,
                 'left_right_ccf_coordinate': -1.0,
@@ -108,7 +109,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, id_json_dict:di
                 'id': channel_id,
                 'valid_data': True
             }
-
+            
             channels.append(channel_dict)
             id_json_dict['channel_ids'].append(channel_id)
 
@@ -130,13 +131,14 @@ def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session
     df_metrics.fillna(0, inplace=True)
 
     local_index = 0
+    
     if len(id_json_dict['unit_ids']) > 0:
         unit_id = id_json_dict['unit_ids'][-1] + 1
     else:
         unit_id = 0
 
     units = []
-
+    
     for index, row in df_metrics.iterrows():
         unit_dict = {
             'peak_channel_id': channels[row.peak_channel]['id'],

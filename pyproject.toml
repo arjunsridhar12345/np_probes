@@ -10,9 +10,9 @@ dependencies = [
     "mypy>=1.3.0",
     "np-session>=0.6.12",
     "pyopenssl>=23.2.0",
-    "allensdk>=2.15.1",
     "SimpleITK>=2.2.1",
     "pynwb",
+    "allensdk>=2.15.1",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
