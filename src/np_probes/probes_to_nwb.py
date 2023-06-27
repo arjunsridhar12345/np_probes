@@ -19,7 +19,11 @@ from allensdk.brain_observatory.ecephys.nwb_util import add_ragged_data_to_dynam
 
 def generate_probe_dictionary(session:np_session.Session, current_probe:str, probe_metrics_path:dict[str, pathlib.Path],
                               align_timestamps_probe_outputs:dict) -> dict:
-    ap_path = probe_metrics_path[current_probe[-1]].parent
+    #ap_path = probe_metrics_path[current_probe[-1]].parent
+    if '626791' in str(session.id):
+        ap_path = probe_metrics_path[current_probe[-1]].parent
+    else:
+        ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(current_probe[-1])))[0].parent
     id_json_dict = None
     
     # unique ids for probe, channel, and units
@@ -101,7 +105,7 @@ def add_lfp_to_object(session:np_session.Session, probes_object:Probes, align_ti
     
     return probes_object
 
-def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time) -> pynwb.NWBFile:
+def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time, main_nwb:pynwb.NWBFile) -> pynwb.NWBFile:
     nwbfile = pynwb.NWBFile(
         session_description='LFP data and associated info for one probe',
         identifier=f"{probe._id}",
@@ -109,11 +113,12 @@ def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time) -> pynwb.N
         session_start_time=session_start_time,
         institution="Allen Institute for Brain Science"
     )
-
+    
     nwbfile = probe._add_probe_to_nwb(
         nwbfile=nwbfile,
         add_only_lfp_channels=True
     )
+    
     lfp_nwb = pynwb.ecephys.LFP(name=f"{probe._name}_lfp")
 
     electrode_table_region = nwbfile.create_electrode_table_region(
@@ -123,7 +128,7 @@ def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time) -> pynwb.N
     )
 
     electrial_series = lfp_nwb.create_electrical_series(
-        name=f"session{session_id}_{probe._name}_lfp_data",
+        name=f"{session_id}_{probe._name}_lfp_data",
         data=probe._lfp.data,
         timestamps=probe._lfp.timestamps,
         electrodes=electrode_table_region
@@ -149,7 +154,8 @@ def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time) -> pynwb.N
     return nwbfile
 
 def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Union[str, pathlib.Path, pynwb.NWBFile]]=None,
-                output_file: Optional[Union[str, pathlib.Path]] = None,) -> tuple[pynwb.NWBFile, dict[str, pynwb.NWBFile]]:
+                output_file: Optional[Union[str, pathlib.Path]] = None,
+                with_lfp=True) -> tuple[pynwb.NWBFile, dict[str, pynwb.NWBFile]]:
     session_folder = pathlib.Path(session_folder)
     session = np_session.Session(session_folder)
 
@@ -161,7 +167,9 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
 
 
     probes_dictionary, align_timestamps_output_dictionary = generate_probes_dictionary(session)
-    create_lfp_json(session)
+    if with_lfp:
+        create_lfp_json(session)
+
     probes_object = Probes.from_json(probes_dictionary['probes'])
     for probe_object in probes_object:
         nwb_file = probe_object.to_nwb(nwb_file)[0]
@@ -197,11 +205,14 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
 
     #nwb_file = probes_object.to_nwb(nwb_file)[0]
 
+    if not with_lfp:
+        return nwb_file, {}
+    
     probes_object_with_lfp = add_lfp_to_object(session, probes_object, align_timestamps_output_dictionary['probe_outputs'])
     lfp_nwbs:dict = {}
 
     for probe in probes_object_with_lfp:
-        lfp_nwbs[probe.name] = add_lfp_to_nwb(probe, str(session.id), session.start)
+        lfp_nwbs[probe.name] = add_lfp_to_nwb(probe, str(session.id), session.start, nwb_file)
 
     if output_file is not None:
         save_nwb(nwb_file, output_file)
@@ -209,23 +220,33 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
     return nwb_file, lfp_nwbs
 
 if __name__ == '__main__':
-    session = np_session.Session('DRpilot_626791_20220817')
+    session = np_session.Session('DRpilot_644866_20230209')
+    
+    
     nwb_file = pynwb.NWBFile(session_description="DR Pilot experiment with probe data", identifier=str(uuid.uuid4()),
                              session_start_time=session.start)
-    
+
+    nwb_file, probe_lfp_map = add_to_nwb(str(session.id), nwb_file, with_lfp=False)
     """
-    nwb_file, probe_lfp_map = add_to_nwb(str(session.id), nwb_file)
-    
     with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probes_061623.nwb', mode='w') as io:
         io.write(nwb_file)
     
+    main_io = pynwb.NWBHDF5IO("DRpilot_626791_20220817_probes_061623.nwb", "r")
+    nwb_main = main_io.read()
+    probe_lfp_map = get_lfp_nwb(probes, nwb_main)
+
     for probe_lfp in probe_lfp_map:
-        with pynwb.NWBHDF5IO('DRpilot_626791_20220817_{}_061623.nwb'.format(probe_lfp), mode='w') as io:
-            io.write(probe_lfp_map[probe_lfp])
-    """
+        with pynwb.NWBHDF5IO('DRpilot_626791_20220817_{}_061623.nwb'.format(probe_lfp), mode='w', manager=main_io.manager) as lfp_io:
+            lfp_io.write(probe_lfp_map[probe_lfp])
+    
     with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probeA_061623.nwb', mode='r') as io:
         nwb_file = io.read()
         print()
+    """
+    
+    
+    
+    
     
     
     

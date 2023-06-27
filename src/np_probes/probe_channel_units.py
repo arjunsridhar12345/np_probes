@@ -118,7 +118,11 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
     return channels
 
 def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session:np_session.Session, channels:list[dict], id_json_dict:dict):
-    probe_metrics_csv_file = probe_metrics_path[current_probe[-1]]
+    #probe_metrics_csv_file = probe_metrics_path[current_probe[-1]]
+    if '626791' in str(session.id):
+        probe_metrics_csv_file = probe_metrics_path[current_probe[-1]]
+    else:
+        probe_metrics_csv_file = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(current_probe[-1])))[0]
 
     if '_test' in str(probe_metrics_csv_file):
         df_metrics = pd.read_csv(probe_metrics_csv_file)

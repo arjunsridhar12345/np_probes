@@ -11,7 +11,7 @@ def create_lfp_json(session: np_session.Session) -> Union[dict, None]:
     if len(list(session.npexp_path.glob('*.h5'))) == 0:
         return None
     
-    get_align_timestamps_output_dictionary(session)
+    #get_align_timestamps_output_dictionary(session)
 
     lfp_dict:dict = {
         'lfp_subsampling':
@@ -25,6 +25,7 @@ def create_lfp_json(session: np_session.Session) -> Union[dict, None]:
     for probe in probe_metrics_path:
         spike_path = probe_metrics_path[probe].parent
         lfp_path = spike_path.parent
+        lfp_path = list(session.npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent
 
         probe_dict = {
             "name": 'probe{}'.format(probe),
