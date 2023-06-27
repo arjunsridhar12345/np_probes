@@ -20,7 +20,7 @@ from allensdk.brain_observatory.ecephys.nwb_util import add_ragged_data_to_dynam
 def generate_probe_dictionary(session:np_session.Session, current_probe:str, probe_metrics_path:dict[str, pathlib.Path],
                               align_timestamps_probe_outputs:dict) -> dict:
     #ap_path = probe_metrics_path[current_probe[-1]].parent
-    if '626791' in str(session.id):
+    if 'test' in str(probe_metrics_path[current_probe[-1]]):
         ap_path = probe_metrics_path[current_probe[-1]].parent
     else:
         ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(current_probe[-1])))[0].parent
@@ -169,7 +169,7 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
     probes_dictionary, align_timestamps_output_dictionary = generate_probes_dictionary(session)
     if with_lfp:
         create_lfp_json(session)
-
+        
     probes_object = Probes.from_json(probes_dictionary['probes'])
     for probe_object in probes_object:
         nwb_file = probe_object.to_nwb(nwb_file)[0]
@@ -220,13 +220,14 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
     return nwb_file, lfp_nwbs
 
 if __name__ == '__main__':
-    session = np_session.Session('DRpilot_644867_20230220')
+    session = np_session.Session('DRpilot_636766_20230126')
     
     
     nwb_file = pynwb.NWBFile(session_description="DR Pilot experiment with probe data", identifier=str(uuid.uuid4()),
                              session_start_time=session.start)
 
-    nwb_file, probe_lfp_map = add_to_nwb(str(session.id), nwb_file, with_lfp=False)
+    nwb_file, probe_lfp_map = add_to_nwb(str(session.id), nwb_file)
+    print(probe_lfp_map['probeA'])
     """
     with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probes_061623.nwb', mode='w') as io:
         io.write(nwb_file)

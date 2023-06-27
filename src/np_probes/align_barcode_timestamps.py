@@ -72,7 +72,7 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
         pathlib.Path(session.npexp_path, 'SDK_outputs').mkdir()
 
     for probe in probe_metrics_path:
-        if '626791' in str(session.id):
+        if 'test' in str(probe_metrics_path[probe]):
             return get_align_timestamps_input_dictionary_weird(session)
         
         ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(probe)))[0].parent
