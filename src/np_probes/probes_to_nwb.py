@@ -220,7 +220,7 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
     return nwb_file, lfp_nwbs
 
 if __name__ == '__main__':
-    session = np_session.Session('DRpilot_644866_20230209')
+    session = np_session.Session('DRpilot_644867_20230220')
     
     
     nwb_file = pynwb.NWBFile(session_description="DR Pilot experiment with probe data", identifier=str(uuid.uuid4()),

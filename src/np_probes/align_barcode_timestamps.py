@@ -34,8 +34,8 @@ def get_align_timestamps_input_dictionary_weird(session:np_session.Session) -> d
         spike_path = probe_metrics_path[probe].parent
         event_path = spike_path.parent.parent / 'events'
         lfp_path = spike_path.parent
-        #apply_sample_number_adjustment(event_path, probe, spike_path)
-        #apply_lfp_sample_number_adjustment(lfp_path, probe)
+        apply_sample_number_adjustment(event_path, probe, spike_path)
+        apply_lfp_sample_number_adjustment(lfp_path, probe)
         probe_dict = {
             "name": 'probe{}'.format(probe),
             "sampling_rate": 30000.0,
