@@ -632,7 +632,7 @@ dependencies = [
 
 [[package]]
 name = "np-session"
-version = "0.6.27"
+version = "0.6.28"
 requires_python = ">=3.7"
 summary = "Tools for accessing data, metadata, and jobs related to ecephys and behavior sessions for the Mindscope Neuropixels team."
 dependencies = [
@@ -2260,9 +2260,9 @@ content_hash = "sha256:b3f20f010b4408dea7859643a724db8082d89bca97ac3a8a42970f3dd
     {url = "https://files.pythonhosted.org/packages/91/7b/9ba634f79c1267913f266444978f0672efdc8b9cb2b7c4fcd4358086875f/np_logging-0.5.1-py3-none-any.whl", hash = "sha256:b48435c17ba7182253c43666dbcab88472e14fabbd5089a248a08509572e1764"},
     {url = "https://files.pythonhosted.org/packages/b2/5e/a21974a9ef2026884e679eda11222093ae5daa19b4a614a54f4a93800888/np_logging-0.5.1.tar.gz", hash = "sha256:0e258eef7a9214246d1a0b0109f0d09f830c002777b83036009ac568a2a0b01a"},
 ]
-"np-session 0.6.27" = [
-    {url = "https://files.pythonhosted.org/packages/48/1b/62558b386ab52b0a7b1a38e5c9aba652624d8edaf2f3fa2688b18a9a561a/np_session-0.6.27-py3-none-any.whl", hash = "sha256:0c93c8fa2939b274c31059571de0a46b78ca9234c67b4bcbf7c6c74225baf8c4"},
-    {url = "https://files.pythonhosted.org/packages/e6/6b/f1a3d00308a316d27ece5748a9123f59ef63dd5b8dda72825c670919d128/np-session-0.6.27.tar.gz", hash = "sha256:3dac03ae3d595a44b94f1f041bc8a932cea4938430c43e7341bc948f065c8039"},
+"np-session 0.6.28" = [
+    {url = "https://files.pythonhosted.org/packages/12/12/8ae323cae2fb446fd6925772382c16c6384085a53f7e1dc8424dbb6c0004/np_session-0.6.28-py3-none-any.whl", hash = "sha256:e9b3829fc319fa783fd6fc2f85c8237c0b6c6133a3952da12ddf5e9e99fdacd5"},
+    {url = "https://files.pythonhosted.org/packages/b8/4d/772e0aca0a24f09970d2d601fb09cec3020248da584deace2ab176f6afc8/np-session-0.6.28.tar.gz", hash = "sha256:47fc8f97c97078d41eab5a85b3030992e43962b5a3c4020a61c5196a0d126a57"},
 ]
 "np-tools 0.1.19" = [
     {url = "https://files.pythonhosted.org/packages/93/5f/124f38b150157d4947797ee6dc1cdb39fe95e2d24bfbd9417c930c5b7a4d/np_tools-0.1.19-py3-none-any.whl", hash = "sha256:1ccc9d6edab3c434fa78d88c2b1d95b0ec54e98f3f0df731752c7343ce372110"},

@@ -26,8 +26,10 @@ def generate_probe_dictionary(session:np_session.Session, current_probe:str, pro
         ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(current_probe[-1])))[0].parent
     id_json_dict = None
     
+    probe_id = uuid.uuid4().int>>64
+
     # unique ids for probe, channel, and units
-    
+    """
     id_json_path = pathlib.Path('//allen/programs/mindscope/workgroups/dynamicrouting', 'dynamic_routing_unique_ids.json')
     if id_json_path.exists():
         with open(id_json_path, 'r') as f:
@@ -38,6 +40,12 @@ def generate_probe_dictionary(session:np_session.Session, current_probe:str, pro
 
     if id_json_dict is None:
         id_json_dict = {'probe_ids': [], 'channel_ids': [], 'unit_ids': []}
+    """
+
+    if 'Data2' in str(session.npexp_path):
+        npexp_path = session.storage_dirs[1] / session.id
+    else:
+        npexp_path = session.npexp_path
     
     probe_information = [probe_info for probe_info in align_timestamps_probe_outputs if probe_info['name'] == current_probe][0]
     probe_dict = {
@@ -58,19 +66,20 @@ def generate_probe_dictionary(session:np_session.Session, current_probe:str, pro
         'spike_clusters_file': pathlib.Path(ap_path, 'spike_clusters.npy').as_posix(),
         'spike_templates_path': pathlib.Path(ap_path, 'spike_templates.npy').as_posix(),
         'templates_path': pathlib.Path(ap_path, 'templates.npy').as_posix(),
-        'spike_times_path': pathlib.Path(session.npexp_path, 'SDK_outputs', 'spike_times_{}_aligned.npy'.format(current_probe[-1])).as_posix()
+        'spike_times_path': pathlib.Path(npexp_path, 'SDK_outputs', 'spike_times_{}_aligned.npy'.format(current_probe[-1])).as_posix()
     }
 
-    id_json_dict['probe_ids'].append(probe_id)
+    #id_json_dict['probe_ids'].append(probe_id)
 
     channels = get_channels_info_for_probe(current_probe, probe_id, session=session, id_json_dict=id_json_dict)
     probe_dict['channels'] = channels
     units = get_units_info_for_probe(current_probe, probe_metrics_path, session, channels, id_json_dict)
     probe_dict['units'] = units
     
+    """
     with open(id_json_path, 'w') as f:
         json.dump(id_json_dict, f, indent=2)
-    
+    """
     return probe_dict
 
 def generate_probes_dictionary(session:np_session.Session) -> tuple[dict, dict]:
@@ -91,12 +100,18 @@ def add_lfp_to_object(session:np_session.Session, probes_object:Probes, align_ti
     for probe_object in probes_object.probes:
         current_probe = probe_object.name
         probe_information = [probe_info for probe_info in align_timestamps_probe_outputs if probe_info['name'] == current_probe][0]
+
+        if 'Data2' in str(session.npexp_path):
+            npexp_path = session.storage_dirs[1] / session.id
+        else:
+            npexp_path = session.npexp_path
+
         probe_meta = {
             'lfp': {
-                'input_data_path': pathlib.Path(session.npexp_path, 'SDK_outputs', '{}_lfp.dat'.format(current_probe)).as_posix(),
-                'input_timestamps_path': pathlib.Path(session.npexp_path, 'SDK_outputs', '{}_lfp_timestamps.npy'.format(current_probe)).as_posix(),
-                'input_channels_path': pathlib.Path(session.npexp_path, 'SDK_outputs', '{}_lfp_channels.npy'.format(current_probe)),
-                'output_path': pathlib.Path(session.npexp_path, 'SDK_outputs', '{}_{}_{}_lfp.nwb'.format(str(session.id), current_probe, '061123'))
+                'input_data_path': pathlib.Path(npexp_path, 'SDK_outputs', '{}_lfp.dat'.format(current_probe)).as_posix(),
+                'input_timestamps_path': pathlib.Path(npexp_path, 'SDK_outputs', '{}_lfp_timestamps.npy'.format(current_probe)).as_posix(),
+                'input_channels_path': pathlib.Path(npexp_path, 'SDK_outputs', '{}_lfp_channels.npy'.format(current_probe)),
+                'output_path': pathlib.Path(npexp_path, 'SDK_outputs', '{}_{}_{}_lfp.nwb'.format(str(session.id), current_probe, '061123'))
             },
             'lfp_sampling_rate': probe_information['global_probe_lfp_sampling_rate'][0],
             'temporal_subsampling_factor': 2.0

@@ -19,22 +19,27 @@ def create_lfp_json(session: np_session.Session) -> Union[dict, None]:
         'probes': []}
     probe_metrics_path = get_probe_metrics_path(session)
 
-    if not pathlib.Path(session.npexp_path, 'SDK_outputs').exists():
-        pathlib.Path(session.npexp_path, 'SDK_outputs').mkdir()
+    if 'Data2' in str(session.npexp_path):
+        npexp_path = session.storage_dirs[1] / session.id
+    else:
+        npexp_path = session.npexp_path
+
+    if not pathlib.Path(npexp_path, 'SDK_outputs').exists():
+        pathlib.Path(npexp_path, 'SDK_outputs').mkdir()
     
     for probe in probe_metrics_path:
         spike_path = probe_metrics_path[probe].parent
         lfp_path = spike_path.parent
-        lfp_path = list(session.npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent
+        lfp_path = list(npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent
 
         probe_dict = {
             "name": 'probe{}'.format(probe),
             "lfp_sampling_rate": 2500.0,
             "lfp_input_file_path": list(lfp_path.glob('*{}-LFP/continuous.dat'.format(probe)))[0].as_posix()[1:],
-            "lfp_timestamps_input_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'lfp_times_{}_aligned.npy'.format(probe)).as_posix()[1:],
-            "lfp_data_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'probe{}_lfp.dat'.format(probe)).as_posix()[1:],
-            "lfp_timestamps_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'probe{}_lfp_timestamps.npy'.format(probe)).as_posix()[1:],
-            "lfp_channel_info_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'probe{}_lfp_channels.npy'.format(probe)).as_posix()[1:],
+            "lfp_timestamps_input_path": pathlib.Path(npexp_path, 'SDK_outputs', 'lfp_times_{}_aligned.npy'.format(probe)).as_posix()[1:],
+            "lfp_data_path": pathlib.Path(npexp_path, 'SDK_outputs', 'probe{}_lfp.dat'.format(probe)).as_posix()[1:],
+            "lfp_timestamps_path": pathlib.Path(npexp_path, 'SDK_outputs', 'probe{}_lfp_timestamps.npy'.format(probe)).as_posix()[1:],
+            "lfp_channel_info_path": pathlib.Path(npexp_path, 'SDK_outputs', 'probe{}_lfp_channels.npy'.format(probe)).as_posix()[1:],
             "surface_channel": 384.0,
             "reference_channels": [
                 191
@@ -43,12 +48,10 @@ def create_lfp_json(session: np_session.Session) -> Union[dict, None]:
 
         lfp_dict['probes'].append(probe_dict)
 
-    with open(pathlib.Path(session.npexp_path, 'SDK_outputs', 'lfp_subsampling_input.json'), 'w') as f:
+    with open(pathlib.Path(npexp_path, 'SDK_outputs', 'lfp_subsampling_input.json'), 'w') as f:
         json.dump(lfp_dict, f, indent=2)
 
     return lfp_dict
 
 if __name__ == '__main__':
-    sessions = list(itertools.chain(*(np_session.sessions(root=dir) for dir in np_session.DRPilotSession.storage_dirs)))
-    for session in sessions:
-       print(pathlib.Path(session.npexp_path, session.id))
+    session = np_session.Session()

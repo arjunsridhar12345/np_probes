@@ -181,3 +181,6 @@ DRpilot_626791_20220817_probeF_061623.nwb
 pdm.lock
 pdm.lock
 pdm.lock
+pdm.lock
+pdm.lock
+src/np_probes/probes_to_nwb.py

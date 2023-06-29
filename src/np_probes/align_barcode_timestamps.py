@@ -75,11 +75,16 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
         if 'test' in str(probe_metrics_path[probe]):
             return get_align_timestamps_input_dictionary_weird(session)
         
+        if 'Data2' in str(session.npexp_path):
+            npexp_path = session.storage_dirs[1] / session.id
+        else:
+            npexp_path = session.npexp_path
+
         ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(probe)))[0].parent
         #spike_path = ap_path.parent
         event_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(probe)))[0].parent.parent.parent / 'events'
-        state_event_path = list(session.npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent.parent / 'events'
-        lfp_path = list(session.npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent
+        state_event_path = list(npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent.parent / 'events'
+        lfp_path = list(npexp_path.glob('*/*/*/*/continuous/*{}-AP'.format(probe)))[0].parent
         #apply_sample_number_adjustment(event_path, probe, probe_metrics_path[probe].parent)
         apply_lfp_sample_number_adjustment(lfp_path, probe)
         probe_dict = {
@@ -92,12 +97,12 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
                 {
                     "name": "spike_timestamps",
                     "input_path": pathlib.Path(ap_path, 'spike_times.npy').as_posix(),
-                    "output_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'spike_times_{}_aligned.npy'.format(probe)).as_posix()
+                    "output_path": pathlib.Path(npexp_path, 'SDK_outputs', 'spike_times_{}_aligned.npy'.format(probe)).as_posix()
                 },
                 {
                     "name": "lfp_timestamps",
                     "input_path": list(lfp_path.glob('*{}-LFP/sample_numbers_adjusted.npy'.format(probe)))[0].as_posix(),
-                    "output_path": pathlib.Path(session.npexp_path, 'SDK_outputs', 'lfp_times_{}_aligned.npy'.format(probe)).as_posix()
+                    "output_path": pathlib.Path(npexp_path, 'SDK_outputs', 'lfp_times_{}_aligned.npy'.format(probe)).as_posix()
                 }
             ],
             'start_index': 0

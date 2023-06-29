@@ -28,11 +28,12 @@ def get_day(session:np_session.Session) -> str:
 def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_session.Session, id_json_dict:dict[str, list]) -> list:
     channels = []
 
+    """
     if len(id_json_dict['channel_ids']) > 0:
         channel_id = id_json_dict['channel_ids'][-1] + 1
     else:
         channel_id = probe_id
-
+    """
     # get channel dataframe
     mouse_id = str(session.mouse)
     probe = current_probe[-1]
@@ -54,6 +55,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
         horizontal_position_odd_index = 0
 
         for index, row in df_ccf_coords.iterrows():
+            channel_id = uuid.uuid4().int>>64
             if index != 0 and index % 2 == 0:
                 vertical_position += 20
             
@@ -91,11 +93,12 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
             }
 
             channels.append(channel_dict)
-            id_json_dict['channel_ids'].append(channel_id)
+            #id_json_dict['channel_ids'].append(channel_id)
 
-            channel_id += 1
+            #channel_id += 1
     else:
         for i in range(384):
+            channel_id = uuid.uuid4().int>>64
             channel_dict = {
                 'probe_id': probe_id,
                 'probe_channel_number': i,
@@ -111,9 +114,9 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
             }
             
             channels.append(channel_dict)
-            id_json_dict['channel_ids'].append(channel_id)
+            #id_json_dict['channel_ids'].append(channel_id)
 
-            channel_id += 1
+            #channel_id += 1
 
     return channels
 
@@ -136,14 +139,16 @@ def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session
 
     local_index = 0
     
+    """
     if len(id_json_dict['unit_ids']) > 0:
         unit_id = id_json_dict['unit_ids'][-1] + 1
     else:
         unit_id = 0
-
+    """
     units = []
     
     for index, row in df_metrics.iterrows():
+        unit_id = uuid.uuid4().int>>64
         unit_dict = {
             'peak_channel_id': channels[row.peak_channel]['id'],
             'cluster_id': row.cluster_id,
@@ -174,9 +179,9 @@ def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session
             'id': unit_id
         }
 
-        id_json_dict['unit_ids'].append(unit_id)
+        #id_json_dict['unit_ids'].append(unit_id)
         units.append(unit_dict)
         local_index += 1
-        unit_id += 1
+        #unit_id += 1
 
     return units
