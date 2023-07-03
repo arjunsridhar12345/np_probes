@@ -15,19 +15,19 @@ from typing import Union, Optional
 from np_probes.utils import init_nwb, load_nwb, save_nwb
 import datetime
 from np_probes.lfp_subsampling_json import create_lfp_json
-from allensdk.brain_observatory.ecephys.nwb_util import add_ragged_data_to_dynamic_table
+from collections.abc import Iterable
+
 
 def generate_probe_dictionary(session:np_session.Session, current_probe:str, probe_metrics_path:dict[str, pathlib.Path],
                               align_timestamps_probe_outputs:dict) -> dict:
     #ap_path = probe_metrics_path[current_probe[-1]].parent
-    if 'test' in str(probe_metrics_path[current_probe[-1]]):
+    if '626791' in str(session.id):
         ap_path = probe_metrics_path[current_probe[-1]].parent
     else:
         ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(current_probe[-1])))[0].parent
     id_json_dict = None
     
-    probe_id = uuid.uuid4().int>>64
-
+    probe_id = str(uuid.uuid4())
     # unique ids for probe, channel, and units
     """
     id_json_path = pathlib.Path('//allen/programs/mindscope/workgroups/dynamicrouting', 'dynamic_routing_unique_ids.json')
@@ -168,6 +168,67 @@ def add_lfp_to_nwb(probe: Probe, session_id: str, session_start_time, main_nwb:p
 
     return nwbfile
 
+def dict_to_indexed_array(dc, order=None):
+    ''' Given a dictionary and an ordered arr, build a concatenation of the dictionary's values and an index describing
+    how that concatenation can be unpacked
+    '''
+
+    if order is None:
+        order = dc.keys()
+
+    data = []
+    index = []
+    counter = 0
+
+    for key in order:
+
+        if isinstance(dc[key], (np.ndarray, list)):
+            extended = dc[key]
+        if isinstance(dc[key], Iterable):
+            extended = [x for x in dc[key]]
+        else:
+            extended = [dc[key]]
+
+        counter += len(extended)
+        index.append(counter)
+        data.append(extended)
+
+    data = np.concatenate(data)
+    return index, data
+
+def add_ragged_data_to_dynamic_table(
+        table, data, column_name, column_description=""
+):
+    """ Builds the index and data vectors required for writing ragged array
+    data to a pynwb dynamic table
+
+    Parameters
+    ----------
+    table : pynwb.core.DynamicTable
+        table to which data will be added (as VectorData / VectorIndex)
+    data : dict
+        each key-value pair describes some grouping of data
+    column_name : str
+        used to set the name of this column
+    column_description : str, optional
+        used to set the description of this column
+
+    Returns
+    -------
+    nwbfile : pynwb.NWBFile
+
+    """
+
+    idx, values = dict_to_indexed_array(data, table.id.data)
+    del data
+
+    table.add_column(
+        name=column_name,
+        description=column_description,
+        data=values,
+        index=idx
+    )
+
 def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Union[str, pathlib.Path, pynwb.NWBFile]]=None,
                 output_file: Optional[Union[str, pathlib.Path]] = None,
                 with_lfp=True) -> tuple[pynwb.NWBFile, dict[str, pynwb.NWBFile]]:
@@ -191,7 +252,14 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
 
     units = probes_object.get_units_table()
     electrodes = nwb_file.electrodes.to_dataframe()
-    units_channels = units.merge(electrodes[['location', 'x', 'y', 'z']], left_on='peak_channel_id', right_index=True)
+    electrodes['channel_id'] = electrodes.index.values
+    units_channels = units.merge(electrodes[['location', 'x', 'y', 'z', 'probe_id', 'channel_id', 'group_name']], 
+                                 left_on=['peak_channel_id', 'local_index'], right_on=['channel_id', 'probe_id'])
+    
+    units_channels.drop(columns=['local_index', 'channel_id', 'probe_id'], inplace=True)
+    units_channels['unit_id'] = units.index.values
+    units_channels = units_channels.set_index('unit_id')
+
     nwb_file.units = pynwb.misc.Units.from_dataframe(
             units_channels,
             name='units')
@@ -235,7 +303,7 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
     return nwb_file, lfp_nwbs
 
 if __name__ == '__main__':
-    session = np_session.Session('DRpilot_636766_20230126')
+    session = np_session.Session('DRpilot_649943_20230216')
     
     
     nwb_file = pynwb.NWBFile(session_description="DR Pilot experiment with probe data", identifier=str(uuid.uuid4()),

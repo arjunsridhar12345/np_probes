@@ -72,14 +72,14 @@ def get_align_timestamps_input_dictionary(session:np_session.Session) -> dict:
         pathlib.Path(session.npexp_path, 'SDK_outputs').mkdir()
 
     for probe in probe_metrics_path:
-        if 'test' in str(probe_metrics_path[probe]):
+        if '626791' in str(session.id):
             return get_align_timestamps_input_dictionary_weird(session)
         
         if 'Data2' in str(session.npexp_path):
             npexp_path = session.storage_dirs[1] / session.id
         else:
             npexp_path = session.npexp_path
-
+            
         ap_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(probe)))[0].parent
         #spike_path = ap_path.parent
         event_path = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(probe)))[0].parent.parent.parent / 'events'

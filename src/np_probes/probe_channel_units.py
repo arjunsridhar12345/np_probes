@@ -20,8 +20,13 @@ def get_annotation_volume() -> np.ndarray:
     return ccf_annotation_array
 
 def get_day(session:np_session.Session) -> str:
-    session_directory = session.npexp_path.parent
-    sessions_mouse = sorted(list(session_directory.glob('*{}*'.format(session.mouse))))
+    if 'Data2' in str(session.npexp_path):
+        npexp_path = session.storage_dirs[1] / session.id
+    else:
+        npexp_path = session.npexp_path
+
+    session_directory = npexp_path.parent
+    sessions_mouse = sorted(list(session_directory.glob('DRpilot*{}*'.format(session.mouse))))
     day = [i + 1 for i in range(len(sessions_mouse)) if str(session.id) in str(sessions_mouse[i])][0]
     return str(day)
 
@@ -41,7 +46,6 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
 
     ccf_alignment_path = pathlib.Path('//allen/programs/mindscope/workgroups/np-behavior/tissuecyte', mouse_id, 
                                              'Probe_{}_channels_{}_warped.csv'.format(probe+day, mouse_id))
-
     if ccf_alignment_path.exists():
         df_ccf_coords = pd.read_csv(ccf_alignment_path)
 
@@ -55,7 +59,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
         horizontal_position_odd_index = 0
 
         for index, row in df_ccf_coords.iterrows():
-            channel_id = uuid.uuid4().int>>64
+            channel_id = str(uuid.uuid4())
             if index != 0 and index % 2 == 0:
                 vertical_position += 20
             
@@ -88,7 +92,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
                 'left_right_ccf_coordinate': float(row.ML*25),
                 'probe_horizontal_position': horizontal_position,
                 'probe_vertical_position': vertical_position,
-                'id': channel_id,
+                'id': row.channel + 1,
                 'valid_data': True
             }
 
@@ -98,7 +102,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
             #channel_id += 1
     else:
         for i in range(384):
-            channel_id = uuid.uuid4().int>>64
+            channel_id = str(uuid.uuid4())
             channel_dict = {
                 'probe_id': probe_id,
                 'probe_channel_number': i,
@@ -109,7 +113,7 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
                 'left_right_ccf_coordinate': -1.0,
                 'probe_horizontal_position': -1,
                 'probe_vertical_position': -1,
-                'id': channel_id,
+                'id': i + 1,
                 'valid_data': True
             }
             
@@ -122,15 +126,14 @@ def get_channels_info_for_probe(current_probe:str, probe_id:int, session:np_sess
 
 def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session:np_session.Session, channels:list[dict], id_json_dict:dict):
     #probe_metrics_csv_file = probe_metrics_path[current_probe[-1]]
-    if 'test' in str(probe_metrics_path[current_probe[-1]]):
+    if '626791' in str(session.id):
         probe_metrics_csv_file = probe_metrics_path[current_probe[-1]]
     else:
         probe_metrics_csv_file = list(session.datajoint_path.glob('*{}*/*/*100*/metrics.csv'.format(current_probe[-1])))[0]
-
+    
     if '_test' in str(probe_metrics_csv_file):
         df_metrics = pd.read_csv(probe_metrics_csv_file)
         df_waveforms = pd.read_csv(pathlib.Path(probe_metrics_csv_file.parent, 'waveform_metrics.csv'))
-
         df_metrics = df_metrics.merge(df_waveforms, on='cluster_id')
     else:
         df_metrics = pd.read_csv(probe_metrics_csv_file)
@@ -148,7 +151,7 @@ def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session
     units = []
     
     for index, row in df_metrics.iterrows():
-        unit_id = uuid.uuid4().int>>64
+        unit_id = str(uuid.uuid4())
         unit_dict = {
             'peak_channel_id': channels[row.peak_channel]['id'],
             'cluster_id': row.cluster_id,
@@ -175,7 +178,7 @@ def get_units_info_for_probe(current_probe:str, probe_metrics_path:dict, session
             'spread': row.spread if not pd.isna(row.spread) else 0,
             'velocity_above': row.velocity_above if not pd.isna(row.velocity_above) else 0,
             'velocity_below': row.velocity_below if not pd.isna(row.velocity_below) else 0,
-            'local_index': local_index,
+            'local_index': channels[row.peak_channel]['probe_id'],
             'id': unit_id
         }
 

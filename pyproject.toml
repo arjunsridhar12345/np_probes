@@ -12,7 +12,7 @@ dependencies = [
     "pyopenssl>=23.2.0",
     "SimpleITK>=2.2.1",
     "pynwb",
-    "allensdk>=2.15.1",
+    "allensdk @ git+https://github.com/arjunsridhar12345/AllenSDK",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
