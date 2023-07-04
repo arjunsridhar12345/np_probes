@@ -2,6 +2,7 @@ import np_session
 import pathlib
 import json
 import numpy as np
+import pandas as pd
 from np_probes.probe_channel_units import get_channels_info_for_probe
 from np_probes.probe_channel_units import get_units_info_for_probe
 from np_probes.utils import get_probe_metrics_path
@@ -219,7 +220,8 @@ def add_ragged_data_to_dynamic_table(
 
     """
 
-    idx, values = dict_to_indexed_array(data, table.id.data)
+    identifiers = table.to_dataframe()['unit_id'].values
+    idx, values = dict_to_indexed_array(data, identifiers)
     del data
 
     table.add_column(
@@ -257,8 +259,8 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
                                  left_on=['peak_channel_id', 'local_index'], right_on=['channel_id', 'probe_id'])
     
     units_channels.drop(columns=['local_index', 'channel_id', 'probe_id'], inplace=True)
-    units_channels['unit_id'] = units.index.values
-    units_channels = units_channels.set_index('unit_id')
+    units_channels['unit_id'] = pd.Series(units.index.values.tolist(), dtype='string')
+    units_channels.index = list(range(units_channels.shape[0]))
 
     nwb_file.units = pynwb.misc.Units.from_dataframe(
             units_channels,
@@ -305,13 +307,13 @@ def add_to_nwb(session_folder: Union[str, pathlib.Path], nwb_file: Optional[Unio
 if __name__ == '__main__':
     session = np_session.Session('DRpilot_649943_20230216')
     
-    
+    """
     nwb_file = pynwb.NWBFile(session_description="DR Pilot experiment with probe data", identifier=str(uuid.uuid4()),
                              session_start_time=session.start)
 
     nwb_file, probe_lfp_map = add_to_nwb(str(session.id), nwb_file)
     print(probe_lfp_map['probeA'])
-    """
+    
     with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probes_061623.nwb', mode='w') as io:
         io.write(nwb_file)
     
@@ -322,11 +324,11 @@ if __name__ == '__main__':
     for probe_lfp in probe_lfp_map:
         with pynwb.NWBHDF5IO('DRpilot_626791_20220817_{}_061623.nwb'.format(probe_lfp), mode='w', manager=main_io.manager) as lfp_io:
             lfp_io.write(probe_lfp_map[probe_lfp])
-    
-    with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probeA_061623.nwb', mode='r') as io:
+    """
+    with pynwb.NWBHDF5IO('DRpilot_626791_20220817_probes_061623.nwb', mode='r') as io:
         nwb_file = io.read()
         print()
-    """
+    
     
     
     
